@@ -1,15 +1,12 @@
-require("source-map-support").install();
+import App from "./providers/App";
 
+import Locals from "./providers/Locals";
+/**
+ * Run the Database pool
+ */
+App.loadDatabase(Locals.config().mongooseUrl);
 
-const main = (temp: string) => {
-	console.log("Process started");
-	try {
-		throw new Error(
-			"sdfsffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-		);
-	} catch (error) {
-		console.log(error);
-	}
-};
-
-main();
+/**
+ * Run the Server on Clusters
+ */
+App.loadServer();
