@@ -1,30 +1,29 @@
 import { NextFunction, Request, Response } from "express";
+import { UnauthorizedError } from "express-jwt";
 // import Log from "../middlewares/Log";
 import Locals from "../providers/Locals";
+import APIError from "./APIError";
+import ValidationError from "./ValidationError";
 
 class Handler {
   /**
    * Show undermaintenance page incase of errors
    */
   public static errorHandler(
-    err: any,
+    err: Error | ValidationError | APIError,
     req: Request,
     res: Response,
     next: NextFunction
   ): any {
-    // Log.error(err.stack);
-    res.status(500);
-
-    if (err.name && err.name === "UnauthorizedError") {
-      const innerMessage =
-        err.inner && err.inner.message ? err.inner.message : undefined;
-      return res.json({
-        error: ["Invalid Token!", innerMessage],
-      });
+    if (err instanceof ValidationError) {
+      return res.status(err.status).json({ error: err.message });
+    } else if (err instanceof APIError) {
+      return res.status(err.status).json({ error: err.message });
+    } else if (err instanceof UnauthorizedError) {
+      return res.status(err.status).json({ error: err.message });
     }
-
-    return res.json({
-      error: err,
+    return res.status(500).json({
+      error: err.message,
     });
   }
 }

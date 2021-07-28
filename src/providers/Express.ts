@@ -1,6 +1,7 @@
 import express from "express";
 
 import Locals from "./Locals";
+import Http from "../middlewares/http.middleware";
 import apiRouter from "../routes/index";
 import ExceptionHandler from "../exeption/Handler";
 
@@ -15,10 +16,15 @@ class Express {
    */
   constructor() {
     this.express = express();
-
+    this.mountMiddlewares();
     this.mountRoutes();
   }
-
+  /**
+   * Mounts all the defined routes
+   */
+  private mountMiddlewares(): void {
+    Http.mount(this.express);
+  }
   /**
    * Mounts all the defined routes
    */
@@ -30,7 +36,7 @@ class Express {
   /**
    * Starts the express server
    */
-  public init(): any {
+  public init(): express.Application {
     const port: number = Locals.config().port;
 
     this.express.use(ExceptionHandler.errorHandler);
@@ -42,6 +48,7 @@ class Express {
         `Server :: Running @ 'http://localhost:${port}'`
       );
     });
+    return this.express;
   }
 }
 
