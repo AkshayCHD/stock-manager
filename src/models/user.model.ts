@@ -1,9 +1,12 @@
 import mongoose from "../providers/Database";
 
+type UserType = "user" | "godUser";
+
 export interface IUser {
   mobile: string;
-  userName: string;
-  lastSeen: Date;
+  totalReturns: number;
+  userType: UserType;
+  funds: number;
 }
 
 // Create the model schema & register your custom methods here
@@ -13,8 +16,9 @@ export interface IUserModel extends IUser, mongoose.Document {}
 export const UserSchema = new mongoose.Schema(
   {
     mobile: { type: Number, unique: true },
-    userName: { type: String, unique: true },
-    lastSeen: { type: Date, default: Date.now() },
+    userType: { type: String, enum: ['user', 'godUser'], default: "user" },
+    totalReturns: { type: Number, default: 0 },
+    funds: { type: Number, default: 0 },
   },
   {
     timestamps: true,
