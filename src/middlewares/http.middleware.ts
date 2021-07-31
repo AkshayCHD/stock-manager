@@ -4,6 +4,9 @@ import { Application } from "express";
 import compress from "compression";
 import expressJwt from "express-jwt";
 import Locals from "../providers/Locals";
+import swaggerUIDist from "swagger-ui-dist";
+import YAML from "yamljs";
+import swaggerUi from "swagger-ui-express";
 
 class Http {
   public static mount(_express: Application): Application {
@@ -19,6 +22,21 @@ class Http {
     _express.use(compress());
     _express.use(express.json());
     _express.use(express.urlencoded({ extended: true }));
+
+    // const pathToSwaggerUi = swaggerUIDist.absolutePath();
+
+    const swaggerDocument = YAML.load(
+      "/home/akshay/Documents/projects/stock-manager/swagger-config.yaml"
+    );
+    console.log(swaggerDocument);
+
+    // const swaggerJsonDocument = require("../../swagger.json");
+
+    _express.use(
+      "/api-docs",
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerDocument)
+    );
     _express.use(
       expressJwt({
         secret: Locals.config().appSecret,
@@ -26,6 +44,8 @@ class Http {
       }).unless({
         path: [
           { url: "/api/user", methods: ["POST"] },
+          { url: "/api/api-docs", methods: ["GET", "POST"] },
+          { url: "/api-docs", methods: ["GET", "POST"] },
           { url: /^\/api\/address\/.*\/.*/, methods: ["GET"] },
           { url: /^\/api\/address\/.*/, methods: ["GET"] },
         ],

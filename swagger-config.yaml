@@ -1,0 +1,177 @@
+openapi: 3.0.1
+info:
+  title: Swagger Petstore
+  description: "This is a sample serdfgdfgdfver Petstore server"
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:5521/api
+tags:
+  - name: transaction
+    description: Manage buy and sell transactions
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+  - name: security
+    description: Manage securities
+  - name: user
+    description: Operations about user
+    externalDocs:
+      description: Find out more about our store
+      url: http://swagger.io
+paths:
+  /user:
+    post:
+      tags:
+        - user
+      summary: Add a new pet to the store
+      operationId: addUser
+      requestBody:
+        description: Pet object that needs to be added to the store
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /transaction/buy/{ticker}:
+    post:
+      tags:
+        - transaction
+      parameters:
+        - name: ticker
+          in: path
+          description: Ticker of the stock to buy
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Transaction properties need to be added
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Transaction"
+        required: true
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+  /transaction/sell/{ticker}:
+    post:
+      tags:
+        - transaction
+      parameters:
+        - name: ticker
+          in: path
+          description: Ticker of the stock to buy
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Transaction properties need to be added
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Transaction"
+        required: true
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+  /security/:
+    post:
+      tags:
+        - security
+      requestBody:
+        description: Transaction properties need to be added
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Security"
+        required: true
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+  /security/{ticker}:
+    delete:
+      tags:
+        - security
+      parameters:
+        - name: ticker
+          in: path
+          description: Ticker of the stock to buy
+          required: true
+          schema:
+            type: string
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userName:
+          type: string
+        mobile:
+          type: string
+      xml:
+        name: User
+    Transaction:
+      type: object
+      properties:
+        shareCount:
+          type: integer
+          format: int64
+      xml:
+        name: Transaction
+    Security:
+      type: object
+      properties:
+        ticker:
+          type: string
+        totalShares:
+          type: integer
+          format: int64
+        currentPrice:
+          type: integer
+          format: int64
+      xml:
+        name: Security
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
