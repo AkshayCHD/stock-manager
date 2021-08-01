@@ -69,6 +69,34 @@ class SecurityController {
       next(error);
     }
   }
+  public async updateCurrentPrice(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    try {
+      const errors = validationResult(request);
+      if (!errors.isEmpty()) {
+        throw new ValidationError(errors, 400);
+      }
+      const { ticker } = request.params;
+      const { currentPrice } = request.body;
+      const security = await Security.findOne({ ticker: ticker });
+
+      if (!security) {
+        throw new APIError("Invalid ticker symbol provided", 400);
+      }
+      await Security.findByIdAndUpdate(security._id, {
+        $set: { currentPrice: currentPrice },
+      });
+      response.json({
+        security: security,
+        message: "Price updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new SecurityController();
