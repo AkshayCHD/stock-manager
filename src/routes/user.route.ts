@@ -11,4 +11,10 @@ router.post(
   userController.createUser
 );
 
+router.put(
+  "/topup",
+  body("funds").isInt({ min: 1, max: 100000 }),
+  userController.topUpUser
+);
+
 export default router;
