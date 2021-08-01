@@ -47,8 +47,9 @@ class TransactionService {
       });
     } else {
       const profit =
-        (security.currentPrice - holding.averagePrice) * transaction.shareCount;
-      const soldFor = security.currentPrice * transaction.shareCount;
+        (transaction.exchangePrice - transaction.averagePrice) *
+        transaction.shareCount;
+      const soldFor = transaction.exchangePrice * transaction.shareCount;
       await User.findByIdAndUpdate(user._id, {
         $inc: {
           lockedFunds: soldFor,
@@ -84,6 +85,11 @@ class TransactionService {
         (currentAveragePrice * currentShares -
           transactionShares * transactionPrice) /
         (currentShares - transactionShares);
+      console.log(currentShares);
+      console.log(transactionShares);
+      console.log(currentAveragePrice);
+      console.log(transactionPrice);
+      console.log(oldAveragePrice);
       await Holding.findByIdAndUpdate(holding._id, {
         $set: { averagePrice: oldAveragePrice },
         $inc: { lockedShares: -transaction.shareCount },

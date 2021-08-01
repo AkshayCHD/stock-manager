@@ -14,8 +14,6 @@ class TransactionController {
   }
   private unlockResource(lockedTill: Date) {
     const todaysDate = new Date();
-    console.log(todaysDate.getTime());
-    console.log(lockedTill.getTime());
     if (todaysDate.getTime() > lockedTill.getTime()) {
       return true;
     }
@@ -176,8 +174,6 @@ class TransactionController {
         averagePrice: holding.averagePrice,
         unlockedTill: TransactionService.getLockedTillDate(),
       });
-      console.log("selling");
-      console.log(shareCount);
       await TransactionService.applyTransaction(
         user,
         holding,
@@ -344,9 +340,6 @@ class TransactionController {
       if (!user || !security || !holding) {
         throw new APIError("Unusual deletion of entry", 400);
       }
-      console.log("*****");
-      console.log(holding);
-      console.log("*****");
       if (transaction.type === "BUY") {
         if (user.funds < transaction.shareCount * transaction.exchangePrice) {
           throw new APIError(

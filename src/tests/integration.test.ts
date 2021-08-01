@@ -1,0 +1,133 @@
+// import * as path from "path";
+// import * as dotenv from "dotenv";
+// import mongoose from "mongoose";
+// dotenv.config({ path: path.join(__dirname, "../../.env.test") });
+// import Locals from "../providers/Locals";
+// import chaiHttp from "chai-http";
+// import chai from "chai";
+// import Express from "../providers/Express";
+// import { Database } from "../providers/Database";
+// import express from "express";
+// import { assert } from "chai";
+// import User, { IUserModel } from "../models/user.model";
+// import Transaction from "../models/transaction.model";
+// import Security, { ISecurity, ISecurityModel } from "../models/security.model";
+// import jwt from "jsonwebtoken";
+// import Holding, { IHoldingModel } from "../models/holdings.model";
+// let should = chai.should();
+
+// chai.use(chaiHttp);
+// // const getToken = (userId) => {
+// //   return jwt.sign({ _id: userId }, Locals.config().appSecret);
+// // };
+// describe("Join Broadcast Flow", () => {
+//   let app: express.Application;
+//   let user: IUserModel;
+//   let security: ISecurityModel;
+//   const userId = mongoose.Types.ObjectId();
+//   const token = jwt.sign({ _id: userId }, Locals.config().appSecret);
+//   before((done) => {
+//     app = Express.init();
+//     Database.init(Locals.config().mongooseUrl);
+//     done();
+//   });
+//   beforeEach(async () => {
+//     user = await new User({
+//       _id: userId,
+//       userName: "123456789",
+//       mobile: "123456789",
+//       funds: 100000,
+//     }).save();
+//     security = await new Security({
+//       _id: userId,
+//       ticker: "tcs",
+//       totalShares: 10000,
+//       sharesForSale: 10000,
+//       currentPrice: 500,
+//     }).save();
+//   });
+//   describe("Large test case to validate all cases", async () => {
+//     it("Large test case ", async () => {
+//       let holding: IHoldingModel | null;
+//       await new Holding({
+//         user: userId,
+//         ticker: security.ticker,
+//         shareCount: 10,
+//         averagePrice: 500,
+//         lockedTill: new Date("2020-01-01"),
+//         lockedShares: 0,
+//       }).save();
+//       await Security.findByIdAndUpdate(security._id, { currentPrice: 400 });
+//       let result = await chai
+//         .request(app)
+//         .post(`/api/transaction/buy/${security.ticker}`)
+//         .set("content-type", "application/json")
+//         .send({ shareCount: 5 })
+//         .set({ Authorization: `Bearer ${token}` });
+
+//       const transaction1 = result.body.transaction;
+//       await Security.findByIdAndUpdate(security._id, { currentPrice: 600 });
+//       result = await chai
+//         .request(app)
+//         .post(`/api/transaction/buy/${security.ticker}`)
+//         .set("content-type", "application/json")
+//         .send({ shareCount: 5 })
+//         .set({ Authorization: `Bearer ${token}` });
+
+//       const transaction2 = result.body.transaction;
+//       result = await chai
+//         .request(app)
+//         .post(`/api/transaction/sell/${security.ticker}`)
+//         .send({ shareCount: 5 })
+//         .set("content-type", "application/json")
+//         .set({ Authorization: `Bearer ${token}` });
+//       const transaction3 = result.body.transaction;
+
+//       await Security.findByIdAndUpdate(security._id, { currentPrice: 1000 });
+//       result = await chai
+//         .request(app)
+//         .post(`/api/transaction/buy/${security.ticker}`)
+//         .set("content-type", "application/json")
+//         .send({ shareCount: 5 })
+//         .set({ Authorization: `Bearer ${token}` });
+
+//       holding = await Holding.findOne({
+//         user: userId,
+//         ticker: security.ticker,
+//       });
+//       assert.equal(holding?.lockedShares, 15);
+//       assert.equal(holding?.shareCount, 5);
+//       assert.equal(holding?.averagePrice, 625);
+//       let updatedUser = await User.findById(user._id);
+//       assert.equal(updatedUser?.totalReturns, 500);
+//       result = await chai
+//         .request(app)
+//         .delete(`/api/transaction/${transaction2._id}`)
+//         .set("content-type", "application/json")
+//         .set({ Authorization: `Bearer ${token}` });
+
+//       holding = await Holding.findOne({
+//         user: userId,
+//         ticker: security.ticker,
+//       });
+//       console.log(holding);
+//       assert.equal(holding?.lockedShares, 10);
+//       assert.equal(holding?.shareCount, 5);
+//       updatedUser = await User.findById(user._id);
+//       console.log(updatedUser);
+//       assert.equal(
+//         updatedUser?.totalReturns.toFixed(6),
+//         (666.6666666).toFixed(6)
+//       );
+
+//       assert.equal(holding?.averagePrice, 644.44);
+//     });
+//   });
+
+//   afterEach(async () => {
+//     await User.deleteMany();
+//     await Transaction.deleteMany();
+//     await Holding.deleteMany();
+//     await Security.deleteMany();
+//   });
+// });

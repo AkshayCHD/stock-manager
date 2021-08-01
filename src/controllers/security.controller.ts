@@ -14,7 +14,6 @@ class SecurityController {
   ) {
     try {
       const errors = validationResult(request);
-      console.log(request.body);
       if (!errors.isEmpty()) {
         throw new ValidationError(errors, 400);
       }
