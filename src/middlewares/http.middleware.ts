@@ -23,14 +23,7 @@ class Http {
     _express.use(express.json());
     _express.use(express.urlencoded({ extended: true }));
 
-    // const pathToSwaggerUi = swaggerUIDist.absolutePath();
-
-    const swaggerDocument = YAML.load(
-      "/home/akshay/Documents/projects/stock-manager/swagger-config.yaml"
-    );
-    console.log(swaggerDocument);
-
-    // const swaggerJsonDocument = require("../../swagger.json");
+    const swaggerDocument = YAML.load(`${__dirname}/../../swagger-config.yaml`);
 
     _express.use(
       "/api-docs",

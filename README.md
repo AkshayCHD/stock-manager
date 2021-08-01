@@ -31,6 +31,16 @@ The appication is a stock management API. It can be used to track a user's holdi
 
 - Clone the project
 
+```
+git clone https://github.com/AkshayCHD/stock-manager.git
+```
+
+- change directory to the project
+
+```
+cd stock-manager
+```
+
 - run  
   `npm install`
 - run  
