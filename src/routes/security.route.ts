@@ -7,7 +7,10 @@ const router = Router();
 router.post(
   "/",
   body("ticker", tickerError).isString().isLength({ min: 3, max: 10 }),
-  body("totalShares").isInt({ min: 10, max: 100000 }),
+  body(
+    "totalShares",
+    "total shares shoule be an integer between 10 to 100000"
+  ).isInt({ min: 10, max: 100000 }),
   body("currentPrice", currentPriceError).isFloat({ min: 1, max: 100000 }),
   securityController.createSecurity
 );

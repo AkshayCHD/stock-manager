@@ -12,6 +12,10 @@ class TransactionController {
   public healthCheck(req: Request, res: Response, next: NextFunction) {
     return res.json({ status: "server up and running" });
   }
+  /**
+   * @param  {Date} lockedTill
+   * @description validation condition for unlocking resource
+   */
   private unlockResource(lockedTill: Date) {
     const todaysDate = new Date();
     if (todaysDate.getTime() > lockedTill.getTime()) {
@@ -19,6 +23,11 @@ class TransactionController {
     }
     return false;
   }
+  /**
+   * @param  {IUserModel} user
+   * @returns Promise
+   * @description make locked funds active after lockin period ends
+   */
   private unlockPotentialFunds = async (
     user: IUserModel
   ): Promise<IUserModel> => {
@@ -29,6 +38,11 @@ class TransactionController {
     }
     return user;
   };
+  /**
+   * @param  {IHoldingModel} holding
+   * @returns Promise
+   * @description make locked shares active after lockin period ends
+   */
   private unlockPotentialShares = async (
     holding: IHoldingModel
   ): Promise<IHoldingModel> => {
@@ -39,6 +53,12 @@ class TransactionController {
     }
     return holding;
   };
+  /**
+   * @param  {Request} request
+   * @param  {Response} response
+   * @param  {NextFunction} next
+   * @description controller function for buy share transactions
+   */
   public buyShares = async (
     request: Request,
     response: Response,
@@ -99,27 +119,6 @@ class TransactionController {
         transaction
       );
       await transaction.save();
-      // const currentShareCount = holding.shareCount;
-      // const currentAveragePrice = holding.averagePrice;
-      // const sharesToBuy = shareCount;
-      // const newAveragePrice =
-      //   (currentShareCount * currentAveragePrice +
-      //     sharesToBuy * security.currentPrice) /
-      //   (sharesToBuy + currentShareCount);
-      // await Holding.findByIdAndUpdate(holding._id, {
-      //   $inc: { shareCount: shareCount },
-      //   $set: { averagePrice: newAveragePrice },
-      // });
-      // await User.findByIdAndUpdate(userId, {
-      //   $inc: { funds: -(sharesToBuy * security.currentPrice) },
-      // });
-      // const transaction = await new Transaction({
-      //   user: userId,
-      //   ticker: security.ticker,
-      //   type: "BUY",
-      //   exchangePrice: security.currentPrice,
-      //   shareCount: shareCount,
-      // }).save();
       response.json({
         message: "Shares purchased successfully",
         transaction: transaction,
@@ -128,7 +127,12 @@ class TransactionController {
       next(error);
     }
   };
-
+  /**
+   * @param  {Request} request
+   * @param  {Response} response
+   * @param  {NextFunction} next
+   * @description controller function for invoking sell share transaction
+   */
   public sellShares = async (
     request: Request,
     response: Response,
@@ -181,22 +185,6 @@ class TransactionController {
         transaction
       );
       await transaction.save();
-      // const profit =
-      //   (security.currentPrice - holding.averagePrice) * shareCount;
-      // const soldFor = security.currentPrice * shareCount;
-      // await User.findByIdAndUpdate(userId, {
-      //   $inc: { funds: soldFor, totalReturns: profit },
-      // });
-      // await Holding.findByIdAndUpdate(holding._id, {
-      //   $inc: { shareCount: -shareCount },
-      // });
-      // const transaction = await new Transaction({
-      //   user: userId,
-      //   ticker: security.ticker,
-      //   type: "SELL",
-      //   exchangePrice: security.currentPrice,
-      //   shareCount: shareCount,
-      // }).save();
       response.json({
         message: "Shares purchased successfully",
         transaction: transaction,
@@ -206,6 +194,12 @@ class TransactionController {
     }
   };
 
+  /**
+   * @param  {Request} request
+   * @param  {Response} response
+   * @param  {NextFunction} next
+   * @description controller function for deleting buy/sell transactions
+   */
   public deleteTransaction = async (
     request: Request,
     response: Response,
@@ -249,35 +243,6 @@ class TransactionController {
       );
       await Transaction.findByIdAndDelete(transaction._id);
 
-      // if (transaction.type === "BUY") {
-      //   const currentShares = holding.shareCount;
-      //   const transactionShares = transaction.shareCount;
-      //   const currentAveragePrice = holding.averagePrice;
-      //   const transactionPrice = transaction.exchangePrice;
-      //   const oldAveragePrice =
-      //     (currentAveragePrice * currentShares -
-      //       transactionShares * transactionPrice) /
-      //     (currentShares - transactionShares);
-      //   await Holding.findByIdAndUpdate(holding._id, {
-      //     $set: { averagePrice: oldAveragePrice },
-      //   });
-      //   await User.findByIdAndUpdate(userId, {
-      //     $inc: { funds: transactionPrice * transactionShares },
-      //   });
-      //   await Transaction.findByIdAndDelete(transactionId);
-      // } else {
-      //   const profitMade = transaction.exchangePrice - holding.averagePrice;
-      //   await Holding.findByIdAndUpdate(holding._id, {
-      //     $inc: { shareCount: transaction.shareCount },
-      //   });
-      //   await User.findByIdAndUpdate(userId, {
-      //     $inc: {
-      //       returns: -profitMade,
-      //       fund: -(transaction.shareCount * transaction.exchangePrice),
-      //     },
-      //   });
-      //   await Transaction.findByIdAndDelete(transactionId);
-      // }
       response.json({
         message: "Transaction Deleted Successfully",
         transaction: transaction,
@@ -287,6 +252,12 @@ class TransactionController {
     }
   };
 
+  /**
+   * @param  {Request} request
+   * @param  {Response} response
+   * @param  {NextFunction} next
+   * @description controller function for updating buy and sell transaction
+   */
   public updateTransaction = async (
     request: Request,
     response: Response,
