@@ -1,10 +1,10 @@
 openapi: 3.0.1
 info:
-  title: Swagger Petstore
-  description: "This is a sample serdfgdfgdfver Petstore server"
+  title: Stock Manager Swagger
+  description: "This is a sample stock management application"
   termsOfService: http://swagger.io/terms/
   contact:
-    email: apiteam@swagger.io
+    email: email.akshay98@gmail.com
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -43,6 +43,51 @@ paths:
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
+    get:
+      tags:
+        - user
+      summary: Get user
+      operationId: getUser
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+        - BearerAuth: []
+  /user/topup:
+    put:
+      tags:
+        - user
+      requestBody:
+        description: Pet object that needs to be added to the store
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopUp"
+      summary: Update user funds
+      operationId: topUpUser
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+        - BearerAuth: []
+
+  /holding:
+    get:
+      tags:
+        - holding
+      summary: Get holdings
+      operationId: getHoldings
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+        - BearerAuth: []
   /transaction/buy/{ticker}:
     post:
       tags:
@@ -93,10 +138,82 @@ paths:
       security:
         - BearerAuth: []
       x-codegen-request-body-name: body
+  /transaction/{transactionId}:
+    delete:
+      tags:
+        - transaction
+      parameters:
+        - name: transactionId
+          in: path
+          description: TransactionId of the transaction to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+    put:
+      tags:
+        - transaction
+      parameters:
+        - name: transactionId
+          in: path
+          description: TransactionId of the transaction to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Transaction properties need to be added
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/UpdateTransaction"
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+    get:
+      tags:
+        - transaction
+      parameters:
+        - name: transactionId
+          in: path
+          description: TransactionId of the transaction to get
+          required: true
+          schema:
+            type: string
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+
+  /transaction:
+    get:
+      tags:
+        - transaction
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+
   /security/:
     post:
       tags:
         - security
+      operationId: "addSecurity"
       requestBody:
         description: Transaction properties need to be added
         content:
@@ -111,10 +228,23 @@ paths:
       security:
         - BearerAuth: []
       x-codegen-request-body-name: body
+  /security:
+    get:
+      tags:
+        - security
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: body
+
   /security/{ticker}:
     delete:
       tags:
         - security
+      operationId: "deleteSecurity"
       parameters:
         - name: ticker
           in: path
@@ -129,6 +259,31 @@ paths:
       security:
         - BearerAuth: []
       x-codegen-request-body-name: body
+    put:
+      tags:
+        - security
+      operationId: "updateSecurity"
+      parameters:
+        - name: ticker
+          in: path
+          description: Ticker of the stock to buy
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Pet object that needs to be added to the store
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecurityPrice"
+      summary: Update security price
+      responses:
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+        - BearerAuth: []
 components:
   schemas:
     User:
@@ -161,15 +316,27 @@ components:
           format: int64
       xml:
         name: Security
-    ApiResponse:
+    TopUp:
       type: object
       properties:
-        code:
+        funds:
+          type: integer
+          format: int32
+    SecurityPrice:
+      type: object
+      properties:
+        currentPrice:
+          type: integer
+          format: int32
+    UpdateTransaction:
+      type: object
+      properties:
+        currentPrice:
+          type: string
+        shareCount:
           type: integer
           format: int32
         type:
-          type: string
-        message:
           type: string
   securitySchemes:
     BearerAuth:
