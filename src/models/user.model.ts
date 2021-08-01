@@ -7,6 +7,8 @@ export interface IUser {
   totalReturns: number;
   userType: UserType;
   funds: number;
+  lockedTill: Date;
+  lockedFunds: number;
 }
 
 // Create the model schema & register your custom methods here
@@ -16,9 +18,11 @@ export interface IUserModel extends IUser, mongoose.Document {}
 export const UserSchema = new mongoose.Schema(
   {
     mobile: { type: Number, unique: true },
-    userType: { type: String, enum: ['user', 'godUser'], default: "user" },
+    userType: { type: String, enum: ["user", "godUser"], default: "user" },
     totalReturns: { type: Number, default: 0 },
-    funds: { type: Number, default: 0 },
+    funds: { type: Number, min: 0, default: 0 },
+    lockedTill: { type: Date, default: new Date("2020-01-01") },
+    lockedFunds: { type: Number, min: 0, default: 0 },
   },
   {
     timestamps: true,

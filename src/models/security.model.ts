@@ -14,9 +14,9 @@ export interface ISecurityModel extends ISecurity, mongoose.Document {}
 export const SecuritySchema = new mongoose.Schema(
   {
     ticker: { type: String, unique: true, index: true, required: true },
-    totalShares: { type: Number, required: true },
-    sharesForSale: { type: Number, required: true },
-    currentPrice: { type: Number, required: true },
+    totalShares: { type: Number, min: 0, required: true },
+    sharesForSale: { type: Number, min: 0, required: true },
+    currentPrice: { type: Number, min: 0, required: true },
   },
   {
     timestamps: true,

@@ -15,6 +15,7 @@ class Handler {
     res: Response,
     next: NextFunction
   ): any {
+    console.log(err);
     if (err instanceof ValidationError) {
       return res.status(err.status).json({ error: err.message });
     } else if (err instanceof APIError) {

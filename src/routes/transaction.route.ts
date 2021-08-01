@@ -21,4 +21,18 @@ router.post(
   transactionController.sellShares
 );
 
+router.delete(
+  "/:transactionId",
+  param("transactionId", "transactionId is required").isString(),
+  transactionController.deleteTransaction
+);
+
+router.put(
+  "/:transactionId",
+  param("transactionId", "transactionId is required").isString(),
+  body("shareCount").optional().isInt({ min: 0, max: 100000 }),
+  body("type").optional().isIn(["BUY", "SELL"]),
+  transactionController.updateTransaction
+);
+
 export default router;

@@ -8,6 +8,8 @@ export interface IHolding {
   ticker: string;
   shareCount: number;
   averagePrice: number;
+  lockedTill: Date;
+  lockedShares: number;
 }
 
 // Create the model schema & register your custom methods here
@@ -18,8 +20,10 @@ export const HoldingSchema = new mongoose.Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     ticker: { type: String, required: true },
-    averagePrice: { type: Number, default: 0 },
-    shareCount: { type: Number, default: 0 },
+    averagePrice: { type: Number, min: 0, default: 0 },
+    shareCount: { type: Number, min: 0, default: 0 },
+    lockedTill: { type: Date, default: new Date("2020-01-01") },
+    lockedShares: { type: Number, min: 0, default: 0 },
   },
   {
     timestamps: true,
