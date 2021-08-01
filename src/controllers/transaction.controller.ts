@@ -377,6 +377,56 @@ class TransactionController {
       next(error);
     }
   };
+
+  public getTransactions = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const errors = validationResult(request);
+      if (!errors.isEmpty()) {
+        throw new ValidationError(errors, 400);
+      }
+      const userId = request.user._id;
+      const transactions = await Transaction.find({ user: userId })
+        .limit(50)
+        .skip(0);
+      response.json({
+        message: "Transaction fetched Successfully",
+        transactions: transactions,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getTransactionsByTicker = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const errors = validationResult(request);
+      if (!errors.isEmpty()) {
+        throw new ValidationError(errors, 400);
+      }
+      const userId = request.user._id;
+      const { ticker } = request.params;
+      const transactions = await Transaction.find({
+        user: userId,
+        ticker: ticker,
+      })
+        .limit(50)
+        .skip(0);
+      response.json({
+        message: "Transaction fetched Successfully",
+        transactions: transactions,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default new TransactionController();

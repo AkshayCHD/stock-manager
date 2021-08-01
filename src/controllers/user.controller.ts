@@ -56,6 +56,26 @@ class UserController {
       next(error);
     }
   }
+  public async getUser(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    try {
+      const errors = validationResult(request);
+      if (!errors.isEmpty()) {
+        throw new ValidationError(errors, 400);
+      }
+      const userId = request.user._id;
+      let user = await User.findById(userId);
+      if (!user) {
+        throw new APIError("Invalid user id provided", 400);
+      }
+      response.json({ message: "User fetched successfully", user: user });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new UserController();

@@ -17,4 +17,6 @@ router.put(
   userController.topUpUser
 );
 
+router.get("/", userController.getUser);
+
 export default router;

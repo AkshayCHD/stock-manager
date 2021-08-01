@@ -97,6 +97,27 @@ class SecurityController {
       next(error);
     }
   }
+
+  public getSecurities = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const errors = validationResult(request);
+      if (!errors.isEmpty()) {
+        throw new ValidationError(errors, 400);
+      }
+      const userId = request.user._id;
+      const securities = await Security.find().limit(50).skip(0);
+      response.json({
+        message: "Security fetched Successfully",
+        securities: securities,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default new SecurityController();
