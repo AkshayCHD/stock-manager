@@ -43,6 +43,16 @@ cd stock-manager
 
 - run  
   `npm install`
+- create .env file with the following format
+
+```
+MONGOOSE_URL=<MONGODB_URI>
+PORT=<PORT>
+APP_SECRET=<APP_SECRET>
+JWT_EXPIRES_IN=<JWT_EXPIRES_IN>
+API_PREFIX=<API_PREFIX>
+```
+
 - run  
   `npm start`
 - Navigate to the url and port where the project was started, like localhost and 5521 and open api explorer
@@ -54,3 +64,9 @@ http://localhost:5521/api-docs
 ```
 
 - Hit the `POST /user` path that is open, to get the authorisation token, to authorise other apis.
+- To run application tests, create `.env.test` file in the root directory.
+- then run the command
+
+```
+npm run test
+```
