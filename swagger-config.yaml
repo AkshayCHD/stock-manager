@@ -183,9 +183,9 @@ paths:
       tags:
         - transaction
       parameters:
-        - name: transactionId
+        - name: ticker
           in: path
-          description: TransactionId of the transaction to get
+          description: Ticker of stock whose transaction is needed to get
           required: true
           schema:
             type: string
