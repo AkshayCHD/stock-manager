@@ -69,10 +69,13 @@ class TransactionController {
         averagePrice: holding.averagePrice,
       }).save();
       try {
-        const { averagePrice, totalReturns, shareCount } =
-          await TransactionService.calculateHoldings(userId, "");
+        const averagePrice =
+          (holding.shareCount * holding.averagePrice +
+            transaction.shareCount * transaction.exchangePrice) /
+          (holding.shareCount + transaction.shareCount);
         await Holding.findByIdAndUpdate(holding._id, {
-          $set: { averagePrice, shareCount, totalReturns },
+          $set: { averagePrice },
+          $inc: { shareCount: transaction.shareCount },
         });
         await User.findByIdAndUpdate(userId, {
           $inc: {
@@ -143,10 +146,11 @@ class TransactionController {
         averagePrice: holding.averagePrice,
       }).save();
       try {
-        const { averagePrice, totalReturns, shareCount } =
-          await TransactionService.calculateHoldings(userId, "");
+        const totalReturns =
+          (transaction.exchangePrice - holding.averagePrice) *
+          transaction.shareCount;
         await Holding.findByIdAndUpdate(holding._id, {
-          $set: { averagePrice, shareCount, totalReturns },
+          $inc: { shareCount: -transaction.shareCount, totalReturns },
         });
         await User.findByIdAndUpdate(userId, {
           $inc: {
