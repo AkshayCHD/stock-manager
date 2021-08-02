@@ -7,6 +7,7 @@ import Locals from "../providers/Locals";
 import swaggerUIDist from "swagger-ui-dist";
 import YAML from "yamljs";
 import swaggerUi from "swagger-ui-express";
+import morgan from "morgan";
 
 class Http {
   public static mount(_express: Application): Application {
@@ -44,7 +45,7 @@ class Http {
         ],
       })
     );
-
+    _express.use(morgan("dev"));
     return _express;
   }
 }

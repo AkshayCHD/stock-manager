@@ -4,23 +4,22 @@ The appication is a stock management API. It can be used to track a user's holdi
 
 ## High Level Architecture
 
-![sdasdas](https://drive.google.com/uc?export=view&id=1c23xrNTzgfmtXKUVgtGEV69HihnONv7T)
+![architectureDiagram](https://drive.google.com/uc?export=view&id=1XzheJISS4bxO0l-EFbM_qW0rLLCVtvTj)
 
 #### User
 
-- User schema contains information about the user like the funds he has to buy shares, his total returns etc.
-- If some shares are sold then the funds received by selling are not immediately added to the user's account as there are still chances of the transaction being modified or deleted, so the funds are stored in another identifier called lockedFunds, with a lockin period, and are unlocked on the next trading day to be used for purchase. Another identifier lockedTill helps us keep a track of the the lockin time.
+- User schema contains information about the user like his userName, mobile, funds he has to buy shares etc.
 
 #### Holdings
 
-- Represent a user's holdings of a particular share. It contains information about the number of shares of a particular stock held by the user, the average price, also the number of shares that are locked.
-- Like in case of user's funds the shares that a user buys are also locked till the time the transaction can be deleted or updated(till the next trading day). After that time the shares are automatically moved to users active share tally.
+- Represent a user's holdings of a particular share. It contains information about the number of shares of a particular stock held by the user, the average price, the total returns from that share etc.
+- In case we add a new buy or sell transaction, then we take the values present in holding object, like averagePrice, and shareCount for calculating their new values, but if we update or delete a transaction, the holdings of a user are recreated from the history of transactions.
 
 #### Transactions
 
 - Stores all the trades that are done by the user, a trade can be of 2 types `BUY` or `SELL`.
-- Each transaction contains details like the number of shares that were exchanged, the price at which they were shared, the average price of the share for the user when the transaction was made etc.
-- A transaction also contains an identifier name unlockedTill, which represents the time till which the transaction is unlocked i.e. the time till which it can be deleted or updated, after this no such operation is possible on the transaction.
+- Each transaction contains details like the number of shares that were exchanged, the price at which they were shared.
+- A transaction can be created, deleted and updated, given the fact that it upholds the consistency of the system, in cases of conflicts if problems like double spending occurs and the transaction deletion/updation is terminated and the user is shown correcponding error.
 
 #### Security
 
