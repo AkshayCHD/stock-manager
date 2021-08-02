@@ -13,47 +13,6 @@ class TransactionController {
     return res.json({ status: "server up and running" });
   }
   /**
-   * @param  {Date} lockedTill
-   * @description validation condition for unlocking resource
-   */
-  private unlockResource(lockedTill: Date) {
-    const todaysDate = new Date();
-    if (todaysDate.getTime() > lockedTill.getTime()) {
-      return true;
-    }
-    return false;
-  }
-  /**
-   * @param  {IUserModel} user
-   * @returns Promise
-   * @description make locked funds active after lockin period ends
-   */
-  private unlockPotentialFunds = async (
-    user: IUserModel
-  ): Promise<IUserModel> => {
-    if (this.unlockResource(user.lockedTill)) {
-      user.funds += user.lockedFunds;
-      user.lockedFunds = 0;
-      await user.save();
-    }
-    return user;
-  };
-  /**
-   * @param  {IHoldingModel} holding
-   * @returns Promise
-   * @description make locked shares active after lockin period ends
-   */
-  private unlockPotentialShares = async (
-    holding: IHoldingModel
-  ): Promise<IHoldingModel> => {
-    if (this.unlockResource(holding.lockedTill)) {
-      holding.shareCount += holding.lockedShares;
-      holding.lockedShares = 0;
-      await holding.save();
-    }
-    return holding;
-  };
-  /**
    * @param  {Request} request
    * @param  {Response} response
    * @param  {NextFunction} next
@@ -98,27 +57,35 @@ class TransactionController {
           averagePrice: 0,
         }).save();
       }
-      user = await this.unlockPotentialFunds(user);
-      holding = await this.unlockPotentialShares(holding);
       if (user.funds < security.currentPrice * shareCount) {
         throw new APIError("Insufficient funds for the purchase", 400);
       }
-      const transaction = new Transaction({
+      const transaction = await new Transaction({
         type: "BUY",
         shareCount: shareCount,
         ticker: security.ticker,
         user: user._id,
         exchangePrice: security.currentPrice,
         averagePrice: holding.averagePrice,
-        unlockedTill: TransactionService.getLockedTillDate(),
-      });
-      await TransactionService.applyTransaction(
-        user,
-        holding,
-        security,
-        transaction
-      );
-      await transaction.save();
+      }).save();
+      try {
+        const { averagePrice, totalReturns, shareCount } =
+          await TransactionService.calculateHoldings(userId, "");
+        await Holding.findByIdAndUpdate(holding._id, {
+          $set: { averagePrice, shareCount, totalReturns },
+        });
+        await User.findByIdAndUpdate(userId, {
+          $inc: {
+            funds: -(transaction.shareCount * transaction.exchangePrice),
+          },
+        });
+        await Security.findByIdAndUpdate(security._id, {
+          $inc: { sharesForSale: -transaction.shareCount },
+        });
+      } catch (error) {
+        await Transaction.findByIdAndDelete(transaction._id);
+        throw new APIError("Transaction coult not be processed", 400);
+      }
       response.json({
         message: "Shares purchased successfully",
         transaction: transaction,
@@ -161,30 +128,38 @@ class TransactionController {
       if (!holding) {
         throw new APIError("User does not hold any shares to place order", 400);
       }
-      user = await this.unlockPotentialFunds(user);
-      holding = await this.unlockPotentialShares(holding);
       if (holding.shareCount < shareCount) {
         throw new APIError(
           "User does not hold enough share to place order",
           400
         );
       }
-      const transaction = new Transaction({
+      const transaction = await new Transaction({
         type: "SELL",
         shareCount: shareCount,
         ticker: security.ticker,
         user: user._id,
         exchangePrice: security.currentPrice,
         averagePrice: holding.averagePrice,
-        unlockedTill: TransactionService.getLockedTillDate(),
-      });
-      await TransactionService.applyTransaction(
-        user,
-        holding,
-        security,
-        transaction
-      );
-      await transaction.save();
+      }).save();
+      try {
+        const { averagePrice, totalReturns, shareCount } =
+          await TransactionService.calculateHoldings(userId, "");
+        await Holding.findByIdAndUpdate(holding._id, {
+          $set: { averagePrice, shareCount, totalReturns },
+        });
+        await User.findByIdAndUpdate(userId, {
+          $inc: {
+            funds: transaction.shareCount * transaction.exchangePrice,
+          },
+        });
+        await Security.findByIdAndUpdate(security._id, {
+          $inc: { sharesForSale: transaction.shareCount },
+        });
+      } catch (error) {
+        await Transaction.findByIdAndDelete(transaction._id);
+        throw new APIError("Transaction coult not be processed", 400);
+      }
       response.json({
         message: "Shares purchased successfully",
         transaction: transaction,
@@ -212,7 +187,6 @@ class TransactionController {
       }
       const userId = request.user._id;
       const { transactionId } = request.params;
-      const { shareCount } = request.body;
       const transaction = await Transaction.findById(transactionId);
       if (!transaction) {
         throw new APIError("Invalid transaction Id provided", 400);
@@ -235,14 +209,33 @@ class TransactionController {
       if (!holding) {
         throw new APIError("No holding present for the following ticker", 400);
       }
-      await TransactionService.revertTransaction(
-        user,
-        holding,
-        security,
-        transaction
-      );
+      try {
+        let fundsChange = 0;
+        let securityChange = 0;
+        if (transaction.type === "BUY") {
+          fundsChange = transaction.shareCount * transaction.exchangePrice;
+          securityChange = transaction.shareCount;
+        } else {
+          fundsChange = -(transaction.shareCount * transaction.exchangePrice);
+          securityChange = -transaction.shareCount;
+        }
+        await User.findByIdAndUpdate(userId, {
+          $inc: {
+            funds: fundsChange,
+          },
+        });
+        const { averagePrice, totalReturns, shareCount } =
+          await TransactionService.calculateHoldings(userId, transaction._id);
+        await Holding.findByIdAndUpdate(holding._id, {
+          $set: { averagePrice, shareCount, totalReturns },
+        });
+        await Security.findByIdAndUpdate(security._id, {
+          $inc: { sharesForSale: securityChange },
+        });
+      } catch (error) {
+        throw new APIError("Transaction coult not be processed", 400);
+      }
       await Transaction.findByIdAndDelete(transaction._id);
-
       response.json({
         message: "Transaction Deleted Successfully",
         transaction: transaction,
@@ -293,45 +286,71 @@ class TransactionController {
       if (!holding) {
         throw new APIError("No holding present for the following ticker", 400);
       }
-      await TransactionService.revertTransaction(
-        user,
-        holding,
-        security,
-        transaction
-      );
+      let prevShareCount = transaction.shareCount,
+        prevType = transaction.type;
       if (shareCount) {
         transaction.shareCount = shareCount;
       }
       if (type) {
         transaction.type = type;
       }
-      holding = await Holding.findById(holding._id);
-      security = await Security.findById(security._id);
-      user = await User.findById(user._id);
-      if (!user || !security || !holding) {
-        throw new APIError("Unusual deletion of entry", 400);
-      }
+      await transaction.save();
       if (transaction.type === "BUY") {
-        if (user.funds < transaction.shareCount * transaction.exchangePrice) {
+        if (
+          user.funds <
+          (transaction.shareCount - prevShareCount) * transaction.exchangePrice
+        ) {
           throw new APIError(
-            "Old transaction reverted but new transaction cannot be applied, due to lack of funds",
+            "Insufficient funds to apply this transaction",
             400
           );
-        } else {
-          if (holding.shareCount < transaction.shareCount) {
-            throw new APIError(
-              "Old transaction reverted but new transaction cannot be applied, due to lack of shares",
-              400
-            );
-          }
         }
       }
-      await TransactionService.applyTransaction(
-        user,
-        holding,
-        security,
-        transaction
-      );
+      try {
+        let fundsChange = 0;
+        let securityChange = 0;
+        if (transaction.type === "BUY" && prevType === "BUY") {
+          fundsChange =
+            -(transaction.shareCount - prevShareCount) *
+            transaction.exchangePrice;
+          securityChange = -(transaction.shareCount - prevShareCount);
+        } else if (transaction.type === "BUY" && prevType === "SELL") {
+          fundsChange =
+            -(transaction.shareCount + prevShareCount) *
+            transaction.exchangePrice;
+          securityChange = -(transaction.shareCount + prevShareCount);
+        } else if (transaction.type === "SELL" && prevType === "SELL") {
+          fundsChange =
+            (transaction.shareCount - prevShareCount) *
+            transaction.exchangePrice;
+
+          securityChange = transaction.shareCount - prevShareCount;
+        } else {
+          fundsChange =
+            (transaction.shareCount + prevShareCount) *
+            transaction.exchangePrice;
+
+          securityChange = transaction.shareCount + prevShareCount;
+        }
+        await User.findByIdAndUpdate(userId, {
+          $inc: {
+            funds: fundsChange,
+          },
+        });
+        const { averagePrice, totalReturns, shareCount } =
+          await TransactionService.calculateHoldings(userId, "");
+        await Holding.findByIdAndUpdate(holding._id, {
+          $set: { averagePrice, shareCount, totalReturns },
+        });
+        await Security.findByIdAndUpdate(security._id, {
+          $inc: { sharesForSale: securityChange },
+        });
+      } catch (error) {
+        await Transaction.findByIdAndUpdate(transaction._id, {
+          $set: { type: prevType, shareCount: prevShareCount },
+        });
+        throw new APIError("Transaction coult not be processed", 400);
+      }
       await transaction.save();
       response.json({
         message: "Transaction Deleted Successfully",

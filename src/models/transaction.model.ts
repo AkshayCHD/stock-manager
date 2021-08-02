@@ -10,7 +10,6 @@ export interface ITransaction {
   exchangePrice: number;
   averagePrice: number;
   shareCount: number;
-  unlockedTill: Date;
 }
 
 // Create the model schema & register your custom methods here
@@ -25,7 +24,6 @@ export const TransactionSchema = new mongoose.Schema(
     exchangePrice: { type: Number, min: 0, required: true },
     averagePrice: { type: Number, min: 0, required: true },
     shareCount: { type: Number, min: 0, default: 0, required: true },
-    unlockedTill: { type: Date, default: new Date("2020-01-01") },
   },
   {
     timestamps: true,

@@ -8,6 +8,7 @@ export interface IHolding {
   ticker: string;
   shareCount: number;
   averagePrice: number;
+  totalReturns: number;
   lockedTill: Date;
   lockedShares: number;
 }
@@ -21,6 +22,7 @@ export const HoldingSchema = new mongoose.Schema(
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     ticker: { type: String, required: true },
     averagePrice: { type: Number, min: 0, default: 0 },
+    totalReturns: { type: Number, default: 0 },
     shareCount: { type: Number, min: 0, default: 0 },
     lockedTill: { type: Date, default: new Date("2020-01-01") },
     lockedShares: { type: Number, min: 0, default: 0 },
