@@ -10,8 +10,8 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 servers:
+  - url: http://52.14.194.61:5521/api
   - url: http://localhost:5521/api
-  - url: http://18.220.191.36:5521/api
 tags:
   - name: transaction
     description: Manage buy and sell transactions
