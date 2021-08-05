@@ -34,6 +34,7 @@ class TransactionController {
       if (!security) {
         throw new APIError("Invalid Security ticker provided", 400);
       }
+      // shares that we want to buy should be greater than shares available for sale
       if (shareCount > security.sharesForSale) {
         throw new APIError(
           "Provided shareCount is not present for circulation",
@@ -42,6 +43,7 @@ class TransactionController {
       }
       const userId = request.user._id;
       let user = await User.findById(userId);
+      // valid userId should be provided, inside token
       if (!user) {
         throw new APIError("Invalid User id", 400);
       }
@@ -57,6 +59,7 @@ class TransactionController {
           averagePrice: 0,
         }).save();
       }
+      // user should have sufficient funds to buy shares
       if (user.funds < security.currentPrice * shareCount) {
         throw new APIError("Insufficient funds for the purchase", 400);
       }
@@ -86,6 +89,7 @@ class TransactionController {
           $inc: { sharesForSale: -transaction.shareCount },
         });
       } catch (error) {
+        // Revert transaction in case of a failure
         await Transaction.findByIdAndDelete(transaction._id);
         throw new APIError("Transaction coult not be processed", 400);
       }
@@ -116,6 +120,7 @@ class TransactionController {
       const { ticker } = request.params;
       const { shareCount } = request.body;
       const security = await Security.findOne({ ticker: ticker });
+      // valid security ticker should be provided
       if (!security) {
         throw new APIError("Invalid Security ticker provided", 400);
       }
@@ -128,9 +133,11 @@ class TransactionController {
         user: userId,
         ticker: security.ticker,
       });
+      // user should be holding some shares to sell
       if (!holding) {
         throw new APIError("User does not hold any shares to place order", 400);
       }
+      // shares held by user should be greater than the amount that he is trying to sell
       if (holding.shareCount < shareCount) {
         throw new APIError(
           "User does not hold enough share to place order",
@@ -161,11 +168,12 @@ class TransactionController {
           $inc: { sharesForSale: transaction.shareCount },
         });
       } catch (error) {
+        // revert transaction incase of failure
         await Transaction.findByIdAndDelete(transaction._id);
         throw new APIError("Transaction coult not be processed", 400);
       }
       response.json({
-        message: "Shares purchased successfully",
+        message: "Shares sold successfully",
         transaction: transaction,
       });
     } catch (error) {
@@ -192,13 +200,16 @@ class TransactionController {
       const userId = request.user._id;
       const { transactionId } = request.params;
       const transaction = await Transaction.findById(transactionId);
+      // transaction mongo Id should be valid
       if (!transaction) {
         throw new APIError("Invalid transaction Id provided", 400);
       }
+      // transaction should belong to the user calling this api
       if (transaction.user.toString() !== userId) {
         throw new APIError("Transaction does not belong to user", 400);
       }
       const security = await Security.findOne({ ticker: transaction.ticker });
+      // security ticker should be valid
       if (!security) {
         throw new APIError("No security found with provided id", 400);
       }
@@ -210,6 +221,7 @@ class TransactionController {
         user: userId,
         ticker: transaction.ticker,
       });
+      // holding object of user with the following share should exist even if it contains zero shares
       if (!holding) {
         throw new APIError("No holding present for the following ticker", 400);
       }
@@ -217,9 +229,13 @@ class TransactionController {
         let fundsChange = 0;
         let securityChange = 0;
         if (transaction.type === "BUY") {
+          // if transaction to be deleted was of type BUY then after deleting it users funds should
+          // increase as, the amount used in buying is not not used
           fundsChange = transaction.shareCount * transaction.exchangePrice;
           securityChange = transaction.shareCount;
         } else {
+          // if transaction to be deleted was of type SELL then after deleting it users funds should
+          // decrease as, the amount received in selling is not received now
           fundsChange = -(transaction.shareCount * transaction.exchangePrice);
           securityChange = -transaction.shareCount;
         }
@@ -239,6 +255,7 @@ class TransactionController {
       } catch (error) {
         throw new APIError("Transaction coult not be processed", 400);
       }
+      // delete transaction after all fields are updated correctly
       await Transaction.findByIdAndDelete(transaction._id);
       response.json({
         message: "Transaction Deleted Successfully",
@@ -269,13 +286,16 @@ class TransactionController {
       const { transactionId } = request.params;
       const { shareCount, type } = request.body;
       const transaction = await Transaction.findById(transactionId);
+      // transactionId should be a valid mongo Id
       if (!transaction) {
         throw new APIError("Invalid transaction Id provided", 400);
       }
+      // transaction to be deleted should belong to the user
       if (transaction.user.toString() !== userId) {
         throw new APIError("Transaction does not belong to user", 400);
       }
       let security = await Security.findOne({ ticker: transaction.ticker });
+      // security ticker should be valid
       if (!security) {
         throw new APIError("No security found with provided id", 400);
       }
@@ -292,6 +312,7 @@ class TransactionController {
       }
       let prevShareCount = transaction.shareCount,
         prevType = transaction.type;
+      // update transaction fields if new fields are provided in put request
       if (shareCount) {
         transaction.shareCount = shareCount;
       }
@@ -300,6 +321,7 @@ class TransactionController {
       }
       await transaction.save();
       if (transaction.type === "BUY") {
+        // validation check for user funds availability as per updated shareCount
         if (
           user.funds <
           (transaction.shareCount - prevShareCount) * transaction.exchangePrice
@@ -313,6 +335,7 @@ class TransactionController {
       try {
         let fundsChange = 0;
         let securityChange = 0;
+        // determine change in user funds depending on previous and current transaction types
         if (transaction.type === "BUY" && prevType === "BUY") {
           fundsChange =
             -(transaction.shareCount - prevShareCount) *
@@ -357,7 +380,7 @@ class TransactionController {
       }
       await transaction.save();
       response.json({
-        message: "Transaction Deleted Successfully",
+        message: "Transaction Updated Successfully",
         transaction: transaction,
       });
     } catch (error) {
@@ -407,7 +430,7 @@ class TransactionController {
         .limit(50)
         .skip(0);
       response.json({
-        message: "Transaction fetched Successfully",
+        message: "Transactions fetched Successfully",
         transactions: transactions,
       });
     } catch (error) {

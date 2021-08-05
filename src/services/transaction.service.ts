@@ -15,6 +15,7 @@ class TransactionService {
       }
       if (transaction.type === "BUY") {
         // calculate the new average price based on the number of shares and exchangePrice of transaction
+        // newAveragePrice = (currentShares * currentPrice + newShares * newPrice) / (currentShares + newShares)
         averagePrice =
           (shareCount * averagePrice +
             transaction.shareCount * transaction.exchangePrice) /
@@ -24,7 +25,8 @@ class TransactionService {
         if (shareCount < transaction.shareCount) {
           throw new APIError("Invalid transaction Set", 400);
         }
-        // Calculate returns based on current average price, and the price at which transaction was recorded
+        // calculate returns based on current average price, and the price at which transaction was recorded
+        // returns = currentReturns + (currentPrice - averagePrice) * shareCount
         totalReturns +=
           (transaction.exchangePrice - averagePrice) * transaction.shareCount;
         shareCount -= transaction.shareCount;
